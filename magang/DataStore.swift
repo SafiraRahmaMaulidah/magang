@@ -8,7 +8,7 @@ import Combine
 
 final class DataStore: ObservableObject {
     static let shared = DataStore()
-
+  // hehe
     @Published var events: [Event] = []
     @Published var favorites: [Event] = []
     @Published var transactions: [TransactionModel] = []
