@@ -14,6 +14,33 @@ class HomeViewModel: ObservableObject {
     @Published var selectedCity = ""
     @Published var events: [Event] = []
 
+    let allIndonesianCities: [String] = [
+        "Jakarta", "Bogor", "Depok", "Tangerang", "Bekasi",
+        "Bandung", "Cimahi", "Cirebon", "Tasikmalaya", "Garut",
+        "Semarang", "Salatiga", "Solo", "Magelang", "Tegal",
+        "Yogyakarta",
+        "Surabaya", "Malang", "Kediri", "Blitar", "Mojokerto", "Pasuruan", "Probolinggo", "Banyuwangi",
+        "Denpasar", "Badung", "Gianyar", "Tabanan",
+        "Medan", "Binjai", "Pematangsiantar", "Tebing Tinggi",
+        "Palembang", "Lubuklinggau", "Prabumulih",
+        "Padang", "Bukittinggi", "Payakumbuh",
+        "Pekanbaru", "Dumai",
+        "Batam", "Tanjung Pinang",
+        "Bandar Lampung", "Metro",
+        "Pontianak", "Singkawang",
+        "Banjarmasin", "Banjarbaru",
+        "Samarinda", "Balikpapan", "Bontang",
+        "Manado", "Bitung", "Tomohon",
+        "Makassar", "Parepare", "Palopo",
+        "Kendari", "Baubau",
+        "Gorontalo",
+        "Ambon", "Tual",
+        "Ternate", "Tidore",
+        "Mataram", "Bima",
+        "Kupang",
+        "Jayapura", "Sorong"
+    ]
+
     init() {
         loadDummyEvents()
     }
@@ -62,9 +89,9 @@ struct HomeView: View {
                     // Pilih Kota
                     Picker("Pilih Kota", selection: $viewModel.selectedCity) {
                         Text("Semua Kota").tag("")
-                        Text("Jakarta").tag("Jakarta")
-                        Text("Bandung").tag("Bandung")
-                        Text("Surabaya").tag("Surabaya")
+                        ForEach(viewModel.allIndonesianCities, id: \.self) { city in
+                            Text(city).tag(city)
+                        }
                     }
                     .pickerStyle(MenuPickerStyle())
                     .padding(.horizontal)
