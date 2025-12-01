@@ -1,74 +1,115 @@
 import SwiftUI
+import FirebaseAuth
+import Combine
+
+struct ProfileInfoView: View {
+  @ObservedObject var auth: AuthenticationManager
+  
+  var body: some View {
+    VStack(spacing: 24) {
+      
+      // Foto Profil (placeholder)
+      Image(systemName: "person.crop.circle")
+        .resizable()
+        .scaledToFit()
+        .frame(width: 90, height: 90)
+        .foregroundStyle(.pink)
+        .padding(.top, 20)
+      
+      // Email
+      VStack(spacing: 4) {
+        Text("Email")
+          .font(.caption)
+          .foregroundStyle(.secondary)
+        
+        Text(auth.user?.email ?? "-")
+          .font(.headline)
+      }
+      
+      Divider().padding(.horizontal)
+      
+      // Tombol Refresh
+      Button {
+        Task { await auth.reloadUser() }
+      } label: {
+        HStack {
+          Image(systemName: "arrow.clockwise")
+          Text("Refresh")
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(.gray.opacity(0.15))
+        .cornerRadius(12)
+      }
+      .padding(.horizontal)
+      
+      // Tombol Logout
+      Button {
+        auth.signOut()
+      } label: {
+        HStack {
+          Image(systemName: "rectangle.portrait.and.arrow.right")
+          Text("Keluar")
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color.red)
+        .foregroundStyle(.white)
+        .cornerRadius(12)
+      }
+      .padding(.horizontal)
+      
+      Spacer()
+    }
+    .navigationTitle("Profile")
+    .navigationBarTitleDisplayMode(.inline)
+  }
+}
 
 struct ProfileView: View {
-    @State private var username = "User Demo"
-    @State private var email = "userdemo@example.com"
-
-    var body: some View {
-        NavigationView {
-            VStack(spacing: 24) {
-
-                // FOTO PROFIL
-                Image(systemName: "person.circle.fill")
-                    .resizable()
-                    .frame(width: 110, height: 110)
-                    .foregroundColor(.blue.opacity(0.7))
-                    .padding(.top, 30)
-
-                // NAMA DAN EMAIL
-                VStack(spacing: 6) {
-                    Text(username)
-                        .font(.title2)
-                        .fontWeight(.semibold)
-
-                    Text(email)
-                        .foregroundColor(.gray)
-                        .font(.subheadline)
-                }
-
-                Divider()
-                    .padding(.horizontal)
-
-                Spacer()
-
-                // LOGOUT
-                Button(action: {
-                    print("Logout tapped")
-                }) {
-                    Text("Logout")
-                        .font(.headline)
-                        .foregroundColor(.red)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.red.opacity(0.1))
-                        .cornerRadius(10)
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 20)
-            }
-            .navigationTitle("Profile")
+  @StateObject private var auth = AuthenticationManager.shared
+  @State private var showLogin = false
+  
+  var body: some View {
+    Group {
+      // MARK: - Kondisi Belum Login
+      if auth.user == nil {
+        VStack(spacing: 16) {
+          Image(systemName: "person.crop.circle.badge.exclamationmark")
+            .font(.system(size: 64))
+            .foregroundStyle(.secondary)
+          
+          Text("Anda belum login")
+            .font(.headline)
+          
+          Button {
+            showLogin = true
+          } label: {
+            Text("Masuk / Daftar")
+              .frame(maxWidth: .infinity)
+              .padding()
+              .background(Color.pink)
+              .foregroundStyle(.white)
+              .cornerRadius(12)
+          }
+          .padding(.horizontal)
         }
-    }
-
-    // REUSABLE ROW COMPONENT
-    @ViewBuilder
-    func profileRow(icon: String, title: String) -> some View {
-        HStack {
-            Image(systemName: icon)
-                .foregroundColor(.blue)
-                .frame(width: 30)
-
-            Text(title)
-                .foregroundColor(.primary)
-
-            Spacer()
-
-            Image(systemName: "chevron.right")
-                .foregroundColor(.gray)
-                .font(.caption)
+        .sheet(isPresented: $showLogin) {
+          LoginView()
         }
-        .padding()
-        .background(Color(.systemGray6))
-        .cornerRadius(12)
+        
+      } else {
+        // MARK: - Sudah Login
+        ProfileInfoView(auth: auth)
+      }
     }
+    .onAppear {
+      auth.loadInitialUser()              // <-- WAJIB agar login bertahan
+      Task { await auth.reloadUser() }    // <-- Refresh data user
+    }
+  }
+}
+
+#Preview {
+  NavigationStack { ProfileView() }
 }
