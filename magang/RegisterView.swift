@@ -1,88 +1,53 @@
 import SwiftUI
-import Combine
-
-class RegisterViewModel: ObservableObject {
-  @Published var email = ""
-  @Published var password = ""
-  @Published var isRegistering = false
-  @Published var isShowSucses = false
-  @Published var isShowFailed = false
-  func register() {
-    Task {
-      do {
-        let user = try await AuthenticationManager.shared.createUser(email: email, password: password)
-        
-        print("Register UID:", user.uid)
-        isShowSucses = true
-        isRegistering = false
-      } catch {
-        isShowFailed = true
-        isRegistering = false
-      }
-    }
-  }
-}
-
 
 struct RegisterView: View {
-  @Environment(\.dismiss) var dismiss
-  @StateObject var vm = RegisterViewModel()
-  
-  
-  var body: some View {
-    NavigationStack {
-      Form {
-        Section("Email") {
-          TextField("Email", text: $vm.email)
-            .keyboardType(.emailAddress)
-            .textInputAutocapitalization(.never)
-            .disableAutocorrection(true)
-        }
-        Section("Password") {
-          TextField("Password", text: $vm.password)
-          
-        }
-        Section {
-          Button {
-            vm.register()
-            vm.isRegistering = true
-          } label: {
-            HStack {
-              if vm.isRegistering {
-                ProgressView()
-              }
-              Text(vm.isRegistering ? "Mendaftarkan..." : "Daftar Akun")
-                .bold()
+    @Environment(\.dismiss) var dismiss
+    @ObservedObject var auth = AuthenticationManager.shared
+
+    @State private var email = ""
+    @State private var password = ""
+    @State private var showError = false
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 16) {
+
+                Image(systemName: "rectangle.and.pencil.and.ellipsis")
+                    .font(.system(size: 70))
+                    .foregroundColor(.pink)
+                    .padding(.bottom, 20)
+
+                TextField("Email", text: $email)
+                    .textFieldStyle(.roundedBorder)
+
+                SecureField("Password", text: $password)
+                    .textFieldStyle(.roundedBorder)
+
+                Button {
+                    Task {
+                        do {
+                            try await auth.register(email: email, password: password)
+                            dismiss()
+                        } catch {
+                            showError = true
+                        }
+                    }
+                } label: {
+                    Text("Daftar")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+
+                Spacer()
             }
-            .disabled(vm.isRegistering)
-          }
-          
-          
-          
-          .alert("Pendaftaran Berhasil", isPresented: $vm.isShowSucses) {
-            Button("Lanjut") { dismiss() }
-          } message: {
-            Text("Akunmu berhasil dibuat!")
-          }
-          
-          // 🔹 ALERT GAGAL
-          .alert("Gagal", isPresented: $vm.isShowFailed) {
-            Button("Tutup") { }
-          } message: {
-            Text("Terjadi kesalahan. Silakan coba lagi.")
-          }         }
-        .navigationTitle("Register")
-        .toolbar {
-          ToolbarItem(placement: .cancellationAction) {
-            Button("Cancel") {
-              dismiss()
+            .padding()
+            .navigationTitle("Daftar")
+            .alert("Gagal mendaftar", isPresented: $showError) {
+                Button("OK", role: .cancel) {}
             }
-          }
         }
-      }
     }
-  }
-}
-#Preview {
-    RegisterView()
 }
