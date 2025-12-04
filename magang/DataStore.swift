@@ -52,7 +52,7 @@ final class DataStore: ObservableObject {
 
       transactions.append(trx)
 
-      // 🔥 Hanya hapus event yang di-checkout
+      // Hanya hapus event yang di-checkout
       favorites.removeAll { $0.id == event.id }
   }
 
